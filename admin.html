@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sterling Admin</title><style>
+:root{--n:#071f38;--g:#2fa76b;--m:#66798b;--l:#dce5eb}
+*{box-sizing:border-box}body{margin:0;background:#f4f7f9;font-family:"Segoe UI",Arial,sans-serif;color:#142536}
+.wrap{max-width:720px;margin:70px auto;padding:20px}.panel{background:#fff;border:1px solid var(--l);border-radius:20px;padding:30px;box-shadow:0 22px 60px #071f3815}
+h1{color:var(--n);margin:0 0 7px}p{color:var(--m)}label{display:block;font-size:13px;font-weight:800;margin:16px 0 6px}
+input,textarea{width:100%;padding:13px;border:1px solid #cad7e0;border-radius:10px;font:inherit}textarea{min-height:95px}
+button{border:0;border-radius:10px;padding:13px 18px;background:var(--g);color:#fff;font-weight:850;cursor:pointer;margin-top:18px}
+.secondary{background:var(--n);margin-left:8px}.hidden{display:none}.note{background:#f1f6f9;padding:13px;border-radius:10px;font-size:13px;color:#53697b;margin-top:18px}
+.status{margin-top:15px;font-weight:700}.danger{color:#a33}.ok{color:#18714d}
+</style></head><body><div class="wrap">
+<div id="login" class="panel"><h1>Sterling Admin</h1><p>Sign in to manage where enquiries are sent and the WhatsApp contact number.</p>
+<label>Admin password</label><input id="password" type="password" autocomplete="current-password"><button onclick="login()">Sign in</button><div id="loginStatus" class="status"></div></div>
+<div id="settings" class="panel hidden"><h1>Website settings</h1><p>Changes apply to the website immediately.</p>
+<label>Enquiry email address</label><input id="email" type="email" placeholder="enquiries@example.com">
+<label>WhatsApp number</label><input id="whatsapp" placeholder="e.g. 447700900000"><div class="note">Use the full international number without the + sign. For a UK number, use 44 and remove the leading 0.</div>
+<label>WhatsApp opening message</label><textarea id="message"></textarea>
+<button onclick="save()">Save settings</button><button class="secondary" onclick="logout()">Log out</button><div id="status" class="status"></div>
+<div class="note"><b>Email delivery:</b> the server uses SMTP credentials stored securely as environment variables. The SMTP password is never shown or stored in this admin screen.</div></div>
+</div><script>
+async function login(){const p=document.getElementById('password').value;const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p})});if(!r.ok){document.getElementById('loginStatus').textContent='Incorrect password';return}showSettings();load()}
+async function showSettings(){document.getElementById('login').classList.add('hidden');document.getElementById('settings').classList.remove('hidden')}
+async function load(){const r=await fetch('/api/admin/config');if(r.status===401)return;const c=await r.json();email.value=c.enquiryEmail||'';whatsapp.value=c.whatsappNumber||'';message.value=c.whatsappMessage||''}
+async function save(){const r=await fetch('/api/admin/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enquiryEmail:email.value,whatsappNumber:whatsapp.value,whatsappMessage:message.value})});const s=document.getElementById('status');if(r.ok){s.className='status ok';s.textContent='Settings saved.'}else{s.className='status danger';s.textContent='Could not save settings.'}}
+async function logout(){await fetch('/api/admin/logout',{method:'POST'});location.reload()}
+(async()=>{const r=await fetch('/api/admin/config');if(r.ok){showSettings();const c=await r.json();email.value=c.enquiryEmail||'';whatsapp.value=c.whatsappNumber||'';message.value=c.whatsappMessage||''}})();
+</script></body></html>
